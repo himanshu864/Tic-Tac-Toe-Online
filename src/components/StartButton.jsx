@@ -1,15 +1,8 @@
-let isReplay = false;
-
-export default function StartButton({ onGameStart }) {
-  function handleClick() {
-    onGameStart();
-    isReplay = true;
-  }
-
+export default function StartButton({ onGameStart, count }) {
   return (
     <div>
-      <button id="control-button" onClick={handleClick}>
-        {isReplay ? "Play Again" : "Start New Game"}
+      <button id="control-button" onClick={() => onGameStart()}>
+        {count == 0 ? "Start New Game" : "Play Again"}
       </button>
     </div>
   );

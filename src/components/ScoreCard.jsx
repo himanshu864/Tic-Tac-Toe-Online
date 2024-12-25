@@ -1,31 +1,26 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function ScoreCard({ name, mark, score, onEdit }) {
   const [isEdit, setEdit] = useState(false);
-  const [playerName, setPlayerName] = useState(name);
+
+  const inputRef = useRef();
 
   function handleEdit() {
+    if (isEdit) onEdit(mark === "X" ? 0 : 1, inputRef.current.value);
     setEdit((edit) => !edit);
-
-    if (mark == "X") onEdit(1, playerName);
-    else onEdit(0, playerName);
-  }
-
-  function handleInput(event) {
-    setPlayerName(event.target.value);
   }
 
   return (
     <div className="card">
       <div className="player-editer">
         {!isEdit ? (
-          <span className="player player-name">{playerName}</span>
+          <span className="player player-name">{name}</span>
         ) : (
           <input
             type="text"
             className="player p-input"
-            value={playerName}
-            onChange={handleInput}
+            defaultValue={name}
+            ref={inputRef}
           />
         )}
 
@@ -35,9 +30,7 @@ export default function ScoreCard({ name, mark, score, onEdit }) {
       </div>
 
       <div className="score-container">
-        <span>{mark}</span>
-        <span>-</span>
-        <span id="scoreP1">{score}</span>
+        {mark} - {score}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import randomAI from "../utils/randomAI.js";
 import instantKill from "../utils/instantKill.js";
 import impossibleAI from "../utils/impossibleAI.js";
 
+// fix this shit. Also type stronger. No more == or !=, only === and !==
 let gameOver = false;
 
 export default function GameGrid({ lonely, difficulty, trigger, onGameOver }) {
@@ -28,26 +29,25 @@ export default function GameGrid({ lonely, difficulty, trigger, onGameOver }) {
 
   // Decides AI move based on difficulty
   function moveAI(grid) {
-    let x = randomAI(grid);
-    if (difficulty > 1) {
-      const instantWin = instantKill(grid, 0);
-      const instantSave = instantKill(grid, 1);
-      if (instantWin != -1) x = instantWin;
-      else if (instantSave != -1) x = instantSave;
-      else if (difficulty == 3) x = impossibleAI(grid);
+    if (difficulty === 3) return impossibleAI(grid);
+    if (difficulty === 2) {
+      const instantWin = instantKill(grid, 1);
+      if (instantWin !== -1) return instantWin;
+      const instantSave = instantKill(grid, 0);
+      if (instantSave !== -1) return instantSave;
     }
-    return x;
+    return randomAI(grid);
   }
 
   // Updates grid based on click and checks gameover
   function updateGrid(grid, row, col) {
     const newGrid = JSON.parse(JSON.stringify(grid)); // Deep copy to avoid mutation
     const playerOneTurn = availableMoves(newGrid).length % 2;
-    newGrid[row][col] = playerOneTurn ? 1 : 0;
+    newGrid[row][col] = playerOneTurn ? 0 : 1;
     setGrid(newGrid);
 
     const score = winCheck(newGrid);
-    if (score != 2) {
+    if (score !== -1) {
       gameOver = true;
       onGameOver(score);
     }
@@ -56,16 +56,15 @@ export default function GameGrid({ lonely, difficulty, trigger, onGameOver }) {
 
   // Main function
   async function handleClick(row, col) {
-    if (isGamePaused || gameOver || grid[row][col] != -1) return;
+    if (isGamePaused || gameOver || grid[row][col] !== -1) return;
 
     // Player Moves
-    let newGrid = updateGrid(grid, row, col);
+    const newGrid = updateGrid(grid, row, col);
 
     // Computer Moves
     if (lonely && !gameOver) {
-      let x = moveAI(newGrid);
+      const x = moveAI(newGrid);
       await delay(600);
-
       updateGrid(newGrid, Math.floor(x / 3), x % 3);
     }
   }
@@ -76,10 +75,10 @@ export default function GameGrid({ lonely, difficulty, trigger, onGameOver }) {
         line.map((cell, col) => (
           <div
             key={3 * row + col}
-            className="tile"
+            className={`tile ${cell === 0 || cell === 1 ? "won" : ""}`}
             onClick={() => handleClick(row, col)}
           >
-            {cell == 1 ? "X" : cell == 0 ? "O" : ""}
+            {cell === 0 ? "X" : cell === 1 ? "O" : ""}
           </div>
         ))
       )}
