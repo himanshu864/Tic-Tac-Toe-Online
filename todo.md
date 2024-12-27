@@ -1,13 +1,15 @@
 # Fix Your Code
 
 - [x] Add bgcolor to selected tiles
-- [ ] Add blinking after winning
-- [ ] Refactor code to avoid prop drilling and instead use `Context API`
+- [x] Add blinking after winning
+- [x] Refactor code to avoid prop drilling and instead use `Context API`
 - [ ] Edit names only before playing
-- [ ] Handle Score Card better
-- [ ] Elegantly handle game reset
+- [x] Handle Score Card better
+- [x] Elegantly handle game reset
+- [ ] Modularize CSS
+- [ ] Add 10 second timer + CSS playerTurn
 
-## Add Online mode via `Web Sockets`
+# Add Online mode via `Web Sockets`
 
 - [ ] Frontend
 - [ ] Backend

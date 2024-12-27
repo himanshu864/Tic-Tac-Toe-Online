@@ -6,6 +6,7 @@ import { winCheck } from "../utils/GameUtils.js";
 
 export default function GameGrid({ grid, isSingle, difficulty, updateGrid }) {
   const [isGamePaused, setGamePause] = useState(false);
+  const [blinkers, setBlinkers] = useState(new Array(9).fill(false));
 
   const isGameOver = winCheck(grid) !== -1;
 
@@ -31,19 +32,26 @@ export default function GameGrid({ grid, isSingle, difficulty, updateGrid }) {
     return randomAI(grid);
   }
 
+  function updateBlinkers(blinky) {
+    const newBlinkers = new Array(9).fill(false);
+    blinky.forEach((cell) => (newBlinkers[cell] = true));
+    setBlinkers(newBlinkers);
+  }
+
   async function handleClick(row, col) {
     if (isGamePaused || isGameOver || grid[row][col] !== -1) return;
 
     // Player Moves
-    const [newGrid, score] = updateGrid(grid, row, col);
-    // return new Score to ensure game isn't over,
-    // Since isGameOver state will update later
+    const [newGrid, isNewGameOver, blinky] = updateGrid(grid, row, col);
+    updateBlinkers(blinky);
 
+    // Since isGameOver state will update later => check newGameOver
     // Computer Moves
-    if (isSingle && score === -1) {
+    if (isSingle && !isNewGameOver) {
       const x = moveAI(newGrid);
       await delay(600);
-      updateGrid(newGrid, Math.floor(x / 3), x % 3);
+      const [, , newBlinky] = updateGrid(newGrid, Math.floor(x / 3), x % 3);
+      updateBlinkers(newBlinky);
     }
   }
 
@@ -56,7 +64,8 @@ export default function GameGrid({ grid, isSingle, difficulty, updateGrid }) {
             className={`
               tile 
               ${cell !== -1 ? "pushed" : "pressed"} 
-              ${!isGameOver && !isGamePaused && cell === -1 ? "pushable" : ""}
+              ${!isGameOver && !isGamePaused && cell === -1 ? "pushable" : ""} 
+              ${isGameOver ? (blinkers[3 * row + col] ? "blink" : "nob") : ""}
             `}
             onClick={() => handleClick(row, col)}
           >

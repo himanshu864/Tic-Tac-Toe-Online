@@ -37,7 +37,9 @@ export default function ScoreCard({
           {isEdit ? "Save" : "Edit"}
         </span>
       </div>
-      {mark} - {playerScore}
+      <div className="player-score">
+        {mark} - {playerScore}
+      </div>
     </div>
   );
 }

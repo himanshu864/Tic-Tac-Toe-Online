@@ -22,31 +22,35 @@ export default function App() {
     setGamePlay(true);
   }
 
+  function handleGameReset() {
+    setPlayerVisibility(true);
+    setGamePlay(false);
+    setDifficulty(-1);
+  }
+
   return (
     <>
-      <h1 className="heading" onClick={() => window.location.reload()}>
+      <h1 className="heading" onClick={handleGameReset}>
         TIC TAC TOE
       </h1>
 
-      {/* No Way Home */}
+      {/* Mounting and unmounting leads to grid/game reset */}
       {isPlaying && <GamePlay isSingle={isSingle} difficulty={difficulty} />}
 
-      <div className="control-mode">
-        {isPlayerModeVisible && (
-          <>
-            <button onClick={() => handleModeSelect(1)}>Single Player</button>
-            <button onClick={() => handleModeSelect(2)}>Two Players</button>
-          </>
-        )}
+      {isPlayerModeVisible && (
+        <div className="control-mode">
+          <button onClick={() => handleModeSelect(1)}>Single Player</button>
+          <button onClick={() => handleModeSelect(2)}>Two Players</button>
+        </div>
+      )}
 
-        {isDiffVisible && (
-          <>
-            <button onClick={() => handleDiffSelect(1)}>Easy</button>
-            <button onClick={() => handleDiffSelect(2)}>Medium</button>
-            <button onClick={() => handleDiffSelect(3)}>Impossible</button>
-          </>
-        )}
-      </div>
+      {isDiffVisible && (
+        <div className="control-mode">
+          <button onClick={() => handleDiffSelect(1)}>Easy</button>
+          <button onClick={() => handleDiffSelect(2)}>Medium</button>
+          <button onClick={() => handleDiffSelect(3)}>Impossible</button>
+        </div>
+      )}
     </>
   );
 }

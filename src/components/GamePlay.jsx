@@ -1,7 +1,12 @@
 import { useState } from "react";
 import ScoreCard from "./ScoreCard.jsx";
 import GameGrid from "./GameGrid.jsx";
-import { availableMoves, initialGrid, winCheck } from "../utils/GameUtils.js";
+import {
+  availableMoves,
+  combinations,
+  initialGrid,
+  winCheck,
+} from "../utils/GameUtils.js";
 
 const marks = ["X", "O"];
 
@@ -17,6 +22,16 @@ export default function GamePlay({ isSingle, difficulty }) {
       newNames[playerIdx] = playerName;
       return newNames;
     });
+  }
+
+  function blinkIt(newGrid) {
+    for (const line of combinations)
+      if (
+        line.every((i) => newGrid[Math.floor(i / 3)][i % 3] === 0) ||
+        line.every((i) => newGrid[Math.floor(i / 3)][i % 3] === 1)
+      )
+        return line;
+    return [];
   }
 
   function handleGameOver(score) {
@@ -44,8 +59,12 @@ export default function GamePlay({ isSingle, difficulty }) {
     setGrid(newGrid);
 
     const score = winCheck(newGrid);
-    if (score !== -1) handleGameOver(score);
-    return [newGrid, score];
+    let blinkers = [-1];
+    if (score !== -1) {
+      handleGameOver(score);
+      blinkers = blinkIt(newGrid);
+    }
+    return [newGrid, score !== -1, blinkers];
   }
 
   function handleGameRestart() {
@@ -70,7 +89,6 @@ export default function GamePlay({ isSingle, difficulty }) {
 
       {gameResult !== "" && <div className="result">{gameResult}</div>}
 
-      {/* Blinking */}
       <GameGrid
         grid={grid}
         isSingle={isSingle}
@@ -78,11 +96,11 @@ export default function GamePlay({ isSingle, difficulty }) {
         updateGrid={updateGrid}
       />
 
-      <div className="control-mode">
-        {winCheck(grid) !== -1 && (
+      {winCheck(grid) !== -1 && (
+        <div className="control-mode">
           <button onClick={handleGameRestart}>Play Again</button>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }
