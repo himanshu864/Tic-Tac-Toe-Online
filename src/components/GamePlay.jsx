@@ -1,9 +1,10 @@
 import { useState } from "react";
 import ScoreCard from "./ScoreCard.jsx";
 import GameGrid from "./GameGrid.jsx";
+import ProgressBar from "./ProgressBar.jsx";
 import {
   availableMoves,
-  combinations,
+  blinkIt,
   initialGrid,
   winCheck,
 } from "../utils/GameUtils.js";
@@ -15,6 +16,8 @@ export default function GamePlay({ isSingle, difficulty }) {
   const [playerScores, setPlayerScores] = useState([0, 0]);
   const [gameResult, setGameResult] = useState("");
   const [grid, setGrid] = useState(initialGrid);
+  const [isGameOver, setGameOver] = useState(false);
+  const [blinkers, setBlinkers] = useState(new Array(9).fill(false));
 
   function handlePlayerNameEdit(playerIdx, playerName) {
     setPlayerNames((prevNames) => {
@@ -24,17 +27,8 @@ export default function GamePlay({ isSingle, difficulty }) {
     });
   }
 
-  function blinkIt(newGrid) {
-    for (const line of combinations)
-      if (
-        line.every((i) => newGrid[Math.floor(i / 3)][i % 3] === 0) ||
-        line.every((i) => newGrid[Math.floor(i / 3)][i % 3] === 1)
-      )
-        return line;
-    return [];
-  }
-
-  function handleGameOver(score) {
+  function handleGameOver(score, newGrid) {
+    setGameOver(true);
     if (score === 0) setGameResult(`You Won, ${playerNames[0]}!`);
     if (score === 1) {
       if (isSingle) setGameResult(`You Lost, ${playerNames[0]}`);
@@ -49,54 +43,66 @@ export default function GamePlay({ isSingle, difficulty }) {
         return newScores;
       });
     }
+    setBlinkers(blinkIt(newGrid));
   }
 
-  // Updates grid based on click and checks gameover
   function updateGrid(grid, row, col) {
-    const newGrid = JSON.parse(JSON.stringify(grid)); // Deep copy to avoid mutation
+    const newGrid = JSON.parse(JSON.stringify(grid));
     const playerOneTurn = availableMoves(newGrid).length % 2;
     newGrid[row][col] = playerOneTurn ? 0 : 1;
     setGrid(newGrid);
 
     const score = winCheck(newGrid);
-    let blinkers = [-1];
-    if (score !== -1) {
-      handleGameOver(score);
-      blinkers = blinkIt(newGrid);
-    }
-    return [newGrid, score !== -1, blinkers];
+    if (score === -1) return [newGrid, false];
+
+    handleGameOver(score, newGrid);
+    return [newGrid, true];
   }
 
   function handleGameRestart() {
     setGrid(initialGrid);
     setGameResult("");
+    setGameOver(false);
+    setBlinkers(blinkIt(initialGrid));
   }
+
+  const isPlayerOneTurn = availableMoves(grid).length % 2 === 1;
 
   return (
     <>
       <div className="cards">
         {marks.map((mark, i) => (
           <ScoreCard
-            isPlayerOneTurn={availableMoves(grid).length % 2 === 1}
+            key={i}
+            isPlayerOneTurn={isPlayerOneTurn}
             playerName={playerNames[i]}
             mark={mark}
             playerScore={playerScores[i]}
             onPlayerNameEdit={handlePlayerNameEdit}
-            key={i}
           />
         ))}
       </div>
 
-      {gameResult !== "" && <div className="result">{gameResult}</div>}
+      {gameResult !== "" ? (
+        <div className="result">{gameResult}</div>
+      ) : (
+        <ProgressBar
+          key={grid}
+          isPlayerOneTurn={isPlayerOneTurn}
+          handleGameOver={handleGameOver}
+        />
+      )}
 
       <GameGrid
         grid={grid}
+        updateGrid={updateGrid}
         isSingle={isSingle}
         difficulty={difficulty}
-        updateGrid={updateGrid}
+        isGameOver={isGameOver}
+        blinkers={blinkers}
       />
 
-      {winCheck(grid) !== -1 && (
+      {isGameOver && (
         <div className="control-mode">
           <button onClick={handleGameRestart}>Play Again</button>
         </div>

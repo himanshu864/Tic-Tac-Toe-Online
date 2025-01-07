@@ -30,3 +30,14 @@ export function winCheck(grid) {
   if (availableMoves(grid).length === 0) return 2; // draw
   return -1; // nothing
 }
+
+export function blinkIt(newGrid) {
+  const blinker = new Array(9).fill(false);
+  for (const line of combinations)
+    if (
+      line.every((i) => newGrid[Math.floor(i / 3)][i % 3] === 0) ||
+      line.every((i) => newGrid[Math.floor(i / 3)][i % 3] === 1)
+    )
+      line.forEach((cell) => (blinker[cell] = true));
+  return blinker;
+}

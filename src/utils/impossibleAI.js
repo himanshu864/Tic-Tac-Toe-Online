@@ -4,11 +4,17 @@ import { availableMoves, winCheck } from "./GameUtils";
 // Minimize loss and Maximize Vistory!
 // Calc all possible outcomes and allot them utility accordingly
 
-// Utility = (remaining tiles + 1) * sign;
+// Utility = (remaining_tiles + 1) * sign;
 // sign : +ve for AI win, -ve for AI lose, 0 for draw
 // We assume Player will move their best move, hence minimize score
-// While we maximize our score.
-function minMax(grid, isAITurn) {
+// While we as AI, maximize score
+
+const memo = new Map();
+
+function minMax(grid, isAITurn, alpha, beta) {
+  const key = grid.flat().join("") + isAITurn;
+  if (memo.has(key)) return memo.get(key); // memoization
+
   const moves = availableMoves(grid);
   const score = winCheck(grid);
 
@@ -16,35 +22,38 @@ function minMax(grid, isAITurn) {
   if (score === 1) return moves.length + 1; // AI wins
   if (score === 2) return 0; // draw
 
-  // set initial score = -Infinity for AI to beat it
   let bestScore = isAITurn ? -Infinity : Infinity;
 
   for (const move of moves) {
-    grid[Math.floor(move / 3)][move % 3] = isAITurn ? 1 : 0; // make move
+    grid[Math.floor(move / 3)][move % 3] = isAITurn ? 1 : 0;
+    const currScore = minMax(grid, !isAITurn, alpha, beta);
+    grid[Math.floor(move / 3)][move % 3] = -1;
 
-    // Recursively call minMax and determine the score
-    const currScore = minMax(grid, !isAITurn);
+    if (isAITurn) {
+      bestScore = Math.max(bestScore, currScore);
+      alpha = Math.max(alpha, bestScore);
+    } else {
+      bestScore = Math.min(bestScore, currScore);
+      beta = Math.max(beta, bestScore);
+    }
 
-    grid[Math.floor(move / 3)][move % 3] = -1; // backtrack
-
-    // make current player choose best score for himself
-    if (isAITurn) bestScore = Math.max(bestScore, currScore);
-    else bestScore = Math.min(bestScore, currScore);
+    if (beta <= alpha) break; // alpha-beta pruning
   }
+
+  memo.set(key, bestScore);
   return bestScore;
 }
 
 // AI function to make best possible move
-export default function impossibleAI(newGrid) {
+export default function impossibleAI(grid) {
   let bestMove = null;
   let bestScore = -100;
-  let grid = JSON.parse(JSON.stringify(newGrid));
 
   // checks which move has best score for AI
-  const moves = availableMoves(newGrid);
+  const moves = availableMoves(grid);
   for (const move of moves) {
     grid[Math.floor(move / 3)][move % 3] = 1;
-    const score = minMax(grid, false);
+    const score = minMax(grid, false, -Infinity, Infinity);
     grid[Math.floor(move / 3)][move % 3] = -1;
 
     if (score > bestScore) {

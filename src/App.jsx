@@ -24,6 +24,7 @@ export default function App() {
 
   function handleGameReset() {
     setPlayerVisibility(true);
+    setDiffVisibility(false);
     setGamePlay(false);
     setDifficulty(-1);
   }

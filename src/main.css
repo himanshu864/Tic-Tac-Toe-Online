@@ -66,7 +66,7 @@ body {
 .cards {
   display: flex;
   gap: 1.2rem;
-  margin-bottom: 1.8rem;
+  margin-bottom: 1rem;
 }
 
 .card {
@@ -99,11 +99,12 @@ body {
 .player {
   color: var(--text);
   font-size: 1rem;
-  width: 150px;
+  width: 120px;
+  padding-left: 9px;
+  padding-top: 5px;
   height: 35px;
   border: none;
   border-radius: 5px;
-  text-transform: uppercase;
 }
 
 .player-name {
@@ -125,6 +126,36 @@ body {
 .edit:hover {
   color: var(--lavender);
   text-shadow: 0 0 5px var(--blue), 0 0 10px var(--blue);
+}
+
+.progressBar {
+  width: 18rem;
+  height: 0.5rem;
+  border-radius: 24px;
+  background: var(--mauve);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.progressBar::-webkit-progress-bar {
+  background: var(--surface0);
+  border-radius: 24px;
+}
+
+progress::-webkit-progress-value {
+  background: var(--mauve);
+  border-radius: 24px;
+  animation: death 5s linear;
+}
+
+@keyframes death {
+  0% {
+    background: var(--green);
+  }
+
+  100% {
+    background: var(--red);
+  }
 }
 
 .control-mode {
@@ -203,18 +234,13 @@ body {
 
 .blink {
   animation: blink 0.6s linear 3;
+  background-color: var(--surface1);
 }
 
 @keyframes blink {
   50% {
-    color: var(--green);
+    transform: scale(1.05);
   }
-}
-
-.nob {
-  background-color: var(--surface1);
-  /* color: var(--pink); */
-  /* border-color: var(--pink); */
 }
 
 .result {
