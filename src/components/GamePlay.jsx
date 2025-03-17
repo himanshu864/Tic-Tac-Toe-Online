@@ -12,7 +12,7 @@ import {
 const marks = ["X", "O"];
 
 export default function GamePlay({ isSingle, difficulty }) {
-  const [playerNames, setPlayerNames] = useState(["Player One", "Player Two"]);
+  const [playerNames, setPlayerNames] = useState(["MAX", "MIN"]);
   const [playerScores, setPlayerScores] = useState([0, 0]);
   const [gameResult, setGameResult] = useState("");
   const [grid, setGrid] = useState(initialGrid);
