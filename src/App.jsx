@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import GamePlay from "./components/GamePlay";
-import { ConnectionManager } from "./components/ConnectionManager";
 
 export default function App() {
   const [isPlayerModeVisible, setPlayerVisibility] = useState(true);
@@ -9,37 +8,28 @@ export default function App() {
   const [isDiffVisible, setDiffVisibility] = useState(false);
   const [difficulty, setDifficulty] = useState(-1);
   const [isPlaying, setGamePlay] = useState(false);
-  const [isConnected, setIsConnected] = useState(socket.connected);
-  const [messages, setMessages] = useState([]);
+  const [isOnline, setOnline] = useState(false);
+  const [isOnlineVisible, setOnlineVisibility] = useState(false);
+  const [isRoomVisible, setRoomVisibility] = useState(false);
+  const [isWaiting, setWaiting] = useState(false);
+  const [isJoining, setJoining] = useState(false);
 
-  // Handle states with socket connection
   useEffect(() => {
-    socket.on("connect", () => {
-      setIsConnected(true);
-      socket.emit("foo", "Hello Everyone!"); // emit a custom event
-    });
-
-    socket.on("disconnect", () => setIsConnected(false));
-
-    // Listen for a custom event
-    socket.on("bar", (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
-
-    // clean up event listens on unmount
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("bar");
-    };
-  }, []);
+    if (isOnline) {
+      socket.connect();
+      console.log("we are online!");
+    } else {
+      socket.disconnect();
+      console.log("we are offline!");
+    }
+  }, [isOnline]);
 
   function handleModeSelect(player) {
     setPlayerVisibility(false);
     setSingleLife(player === 1);
 
     if (player === 1) setDiffVisibility(true);
-    else setGamePlay(true);
+    else setOnlineVisibility(true);
   }
 
   function handleDiffSelect(selectedDifficulty) {
@@ -48,11 +38,44 @@ export default function App() {
     setGamePlay(true);
   }
 
+  function handleOnlineSelect(onlineMode) {
+    setOnline(onlineMode);
+    setOnlineVisibility(false);
+
+    if (onlineMode) setRoomVisibility(true);
+    else setGamePlay(true);
+  }
+
+  function handleRoomCreation() {
+    setRoomVisibility(false);
+    setWaiting(true);
+  }
+
+  function handleRoomJoiner() {
+    setRoomVisibility(false);
+    setJoining(true);
+  }
+
+  function handleOpponentJoin() {
+    setWaiting(false);
+    setGamePlay(true);
+  }
+
+  function handleRoomJoining() {
+    setJoining(false);
+    setGamePlay(true);
+  }
+
   function handleGameReset() {
     setPlayerVisibility(true);
     setDiffVisibility(false);
+    setOnlineVisibility(false);
+    setRoomVisibility(false);
     setGamePlay(false);
     setDifficulty(-1);
+    setOnline(false);
+    setWaiting(false);
+    setJoining(false);
   }
 
   return (
@@ -60,17 +83,6 @@ export default function App() {
       <h1 className="heading" onClick={handleGameReset}>
         TIC TAC TOE
       </h1>
-
-      {/* Socket Dynamic Rendering */}
-      <p>Connected: {isConnected ? "Yes" : "No"}</p>
-      <h2>Messages</h2>
-      <ul>
-        {messages.map((msg, i) => (
-          <li key={i}>{msg}</li>
-        ))}
-      </ul>
-      <ConnectionManager />
-
       {/* Mounting and unmounting leads to grid/game reset */}
       {isPlaying && <GamePlay isSingle={isSingle} difficulty={difficulty} />}
       {isPlayerModeVisible && (
@@ -85,6 +97,31 @@ export default function App() {
           <button onClick={() => handleDiffSelect(2)}>Medium</button>
           <button onClick={() => handleDiffSelect(3)}>Impossible</button>
         </div>
+      )}
+      {isOnlineVisible && (
+        <div className="control-mode">
+          <button onClick={() => handleOnlineSelect(false)}>Offline</button>
+          <button onClick={() => handleOnlineSelect(true)}>Online</button>
+        </div>
+      )}
+      {isRoomVisible && (
+        <div className="control-mode">
+          <button onClick={handleRoomCreation}>Create Room</button>
+          <button onClick={handleRoomJoiner}>Join Room</button>
+        </div>
+      )}
+      {isWaiting && (
+        <>
+          <div onClick={handleOpponentJoin}>Waiting...</div>
+          <div>Room ID: *from backend*</div>
+        </>
+      )}
+      {isJoining && (
+        <form id="room-form" onSubmit={handleRoomJoining}>
+          <label htmlFor="room-id">Enter Room ID: </label>
+          <input type="text" id="room-id" />
+          <button type="submit">Join</button>
+        </form>
       )}
     </>
   );
