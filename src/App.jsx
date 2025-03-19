@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { socket } from "./socket";
 import GamePlay from "./components/GamePlay";
 
@@ -13,6 +13,14 @@ export default function App() {
   const [isRoomVisible, setRoomVisibility] = useState(false);
   const [isWaiting, setWaiting] = useState(false);
   const [isJoining, setJoining] = useState(false);
+  const [roomID, setRoomID] = useState("");
+
+  const roomRef = useRef();
+
+  useEffect(() => {
+    socket.on("opponent-join", handleOpponentJoin);
+    return () => socket.off("opponent-join");
+  }, []);
 
   useEffect(() => {
     if (isOnline) {
@@ -48,6 +56,10 @@ export default function App() {
 
   function handleRoomCreation() {
     setRoomVisibility(false);
+    socket.emit("create-room", (error, room) => {
+      if (!error) setRoomID(room);
+      else alert("Room creation failed: " + error.error);
+    });
     setWaiting(true);
   }
 
@@ -62,8 +74,14 @@ export default function App() {
   }
 
   function handleRoomJoining() {
-    setJoining(false);
-    setGamePlay(true);
+    const room = roomRef.current.value;
+    socket.emit("join-room", room, (error) => {
+      if (error) alert("Connection Failed: " + error.error);
+      else {
+        setJoining(false);
+        setGamePlay(true);
+      }
+    });
   }
 
   function handleGameReset() {
@@ -112,16 +130,16 @@ export default function App() {
       )}
       {isWaiting && (
         <>
-          <div onClick={handleOpponentJoin}>Waiting...</div>
-          <div>Room ID: *from backend*</div>
+          <div>Waiting...</div>
+          <div>Room ID: {roomID}</div>
         </>
       )}
       {isJoining && (
-        <form id="room-form" onSubmit={handleRoomJoining}>
-          <label htmlFor="room-id">Enter Room ID: </label>
-          <input type="text" id="room-id" />
-          <button type="submit">Join</button>
-        </form>
+        <>
+          <div>Enter Room ID: </div>
+          <input type="text" id="room-id" ref={roomRef} />
+          <button onClick={handleRoomJoining}>Join</button>
+        </>
       )}
     </>
   );
