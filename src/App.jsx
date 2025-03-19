@@ -10,27 +10,25 @@ export default function App() {
   const [isPlaying, setGamePlay] = useState(false);
   const [isOnline, setOnline] = useState(false);
   const [isOnlineVisible, setOnlineVisibility] = useState(false);
+  const [roomID, setRoomID] = useState("");
   const [isRoomVisible, setRoomVisibility] = useState(false);
+  const [hasFriend, setFriend] = useState(false);
+  const [isFriendsVisible, setFriendVisibility] = useState(false);
   const [isWaiting, setWaiting] = useState(false);
   const [isJoining, setJoining] = useState(false);
-  const [roomID, setRoomID] = useState("");
 
   const roomRef = useRef();
 
   useEffect(() => {
-    socket.on("opponent-join", handleOpponentJoin);
-    return () => socket.off("opponent-join");
-  }, []);
+    socket.on("friend-join", handleOpponentJoin);
+    socket.on("random-join", handleOpponentJoin);
+    socket.on("opponent-left", handleOpponentLeave);
 
-  useEffect(() => {
-    if (isOnline) {
-      socket.connect();
-      console.log("we are online!");
-    } else {
-      socket.disconnect();
-      console.log("we are offline!");
-    }
-  }, [isOnline]);
+    return () => {
+      socket.off("friend-join");
+      socket.off("random-join");
+    };
+  }, []);
 
   function handleModeSelect(player) {
     setPlayerVisibility(false);
@@ -50,8 +48,24 @@ export default function App() {
     setOnline(onlineMode);
     setOnlineVisibility(false);
 
-    if (onlineMode) setRoomVisibility(true);
+    if (onlineMode) setFriendVisibility(true);
     else setGamePlay(true);
+  }
+
+  function handleFriendSelect() {
+    setFriend(true);
+    setFriendVisibility(false);
+    setRoomVisibility(true);
+  }
+
+  function handleRandomSelect() {
+    setFriendVisibility(false);
+    socket.emit("random-room", (error, isLonely) => {
+      if (!error) {
+        if (isLonely) setWaiting(true);
+        else setGamePlay(true);
+      } else alert("Room creation failed: " + error.error);
+    });
   }
 
   function handleRoomCreation() {
@@ -68,11 +82,6 @@ export default function App() {
     setJoining(true);
   }
 
-  function handleOpponentJoin() {
-    setWaiting(false);
-    setGamePlay(true);
-  }
-
   function handleRoomJoining() {
     const room = roomRef.current.value;
     socket.emit("join-room", room, (error) => {
@@ -84,14 +93,26 @@ export default function App() {
     });
   }
 
+  function handleOpponentJoin() {
+    setWaiting(false);
+    setGamePlay(true);
+  }
+
+  function handleOpponentLeave() {
+    setGamePlay(false);
+    setWaiting(true);
+  }
+
   function handleGameReset() {
     setPlayerVisibility(true);
     setDiffVisibility(false);
     setOnlineVisibility(false);
     setRoomVisibility(false);
+    setFriendVisibility(false);
     setGamePlay(false);
     setDifficulty(-1);
     setOnline(false);
+    setFriend(false);
     setWaiting(false);
     setJoining(false);
   }
@@ -101,8 +122,8 @@ export default function App() {
       <h1 className="heading" onClick={handleGameReset}>
         TIC TAC TOE
       </h1>
-      {/* Mounting and unmounting leads to grid/game reset */}
-      {isPlaying && <GamePlay isSingle={isSingle} difficulty={difficulty} />}
+
+      {/* Settings */}
       {isPlayerModeVisible && (
         <div className="control-mode">
           <button onClick={() => handleModeSelect(1)}>Single Player</button>
@@ -122,6 +143,12 @@ export default function App() {
           <button onClick={() => handleOnlineSelect(true)}>Online</button>
         </div>
       )}
+      {isFriendsVisible && (
+        <div className="control-mode">
+          <button onClick={handleFriendSelect}>Friend</button>
+          <button onClick={handleRandomSelect}>Random</button>
+        </div>
+      )}
       {isRoomVisible && (
         <div className="control-mode">
           <button onClick={handleRoomCreation}>Create Room</button>
@@ -130,8 +157,12 @@ export default function App() {
       )}
       {isWaiting && (
         <>
-          <div>Waiting...</div>
-          <div>Room ID: {roomID}</div>
+          <div>Waiting...</div> {/* Loading */}
+          {hasFriend && (
+            <>
+              <div>Room ID: {roomID}</div> {/* Copy */}
+            </>
+          )}
         </>
       )}
       {isJoining && (
@@ -140,6 +171,15 @@ export default function App() {
           <input type="text" id="room-id" ref={roomRef} />
           <button onClick={handleRoomJoining}>Join</button>
         </>
+      )}
+
+      {/* Mounting and unmounting leads to grid/game reset */}
+      {isPlaying && (
+        <GamePlay
+          isSingle={isSingle}
+          difficulty={difficulty}
+          isOnline={isOnline}
+        />
       )}
     </>
   );

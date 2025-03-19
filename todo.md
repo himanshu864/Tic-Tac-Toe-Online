@@ -6,9 +6,11 @@
 
 # Add Online mode via `Web Sockets`
 
-- [ ] Frontend
-  - [ ] Random
-  - [ ] With Friend
-- [ ] Backend
-  - [ ] Random
-  - [ ] With Friend
+1. Waiting loading
+2. Copy button
+
+- [ ] Names
+- [ ] Delete sockets and rooms if empty
+- [ ] With Friend
+- [ ] Random
+- [ ] Gameplay
