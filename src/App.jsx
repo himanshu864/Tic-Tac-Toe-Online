@@ -20,13 +20,14 @@ export default function App() {
   const roomRef = useRef();
 
   useEffect(() => {
-    socket.on("friend-join", handleOpponentJoin);
-    socket.on("random-join", handleOpponentJoin);
-    socket.on("opponent-left", handleOpponentLeave);
+    socket.on("opponent-join", handleOpponentJoin);
+    socket.on("opponent-left", () => {
+      socket.emit("betrayal");
+      handleGameReset();
+    });
 
     return () => {
-      socket.off("friend-join");
-      socket.off("random-join");
+      socket.off("opponent-join");
       socket.off("opponent-left");
     };
   }, []);
@@ -99,11 +100,6 @@ export default function App() {
     setGamePlay(true);
   }
 
-  function handleOpponentLeave() {
-    setGamePlay(false);
-    setWaiting(true);
-  }
-
   function handleGameReset() {
     setPlayerVisibility(true);
     setDiffVisibility(false);
@@ -116,13 +112,14 @@ export default function App() {
     setFriendOnline(false);
     setWaiting(false);
     setJoining(false);
+    socket.disconnect();
+    socket.connect();
   }
 
   function handleCopyClipboard() {
     navigator.clipboard.writeText(roomID).then(() => {
       const copyBtn = document.querySelector(".copy-btn");
       copyBtn.classList.add("copied", "copied-pulse");
-
       setTimeout(() => {
         copyBtn.classList.remove("copied", "copied-pulse");
       }, 1000);
