@@ -12,7 +12,7 @@ export default function App() {
   const [isOnlineVisible, setOnlineVisibility] = useState(false);
   const [roomID, setRoomID] = useState("");
   const [isRoomVisible, setRoomVisibility] = useState(false);
-  const [hasFriend, setFriend] = useState(false);
+  const [hasFriendOnline, setFriendOnline] = useState(false);
   const [isFriendsVisible, setFriendVisibility] = useState(false);
   const [isWaiting, setWaiting] = useState(false);
   const [isJoining, setJoining] = useState(false);
@@ -27,6 +27,7 @@ export default function App() {
     return () => {
       socket.off("friend-join");
       socket.off("random-join");
+      socket.off("opponent-left");
     };
   }, []);
 
@@ -53,7 +54,7 @@ export default function App() {
   }
 
   function handleFriendSelect() {
-    setFriend(true);
+    setFriendOnline(true);
     setFriendVisibility(false);
     setRoomVisibility(true);
   }
@@ -112,9 +113,20 @@ export default function App() {
     setGamePlay(false);
     setDifficulty(-1);
     setOnline(false);
-    setFriend(false);
+    setFriendOnline(false);
     setWaiting(false);
     setJoining(false);
+  }
+
+  function handleCopyClipboard() {
+    navigator.clipboard.writeText(roomID).then(() => {
+      const copyBtn = document.querySelector(".copy-btn");
+      copyBtn.classList.add("copied", "copied-pulse");
+
+      setTimeout(() => {
+        copyBtn.classList.remove("copied", "copied-pulse");
+      }, 1000);
+    });
   }
 
   return (
@@ -155,22 +167,36 @@ export default function App() {
           <button onClick={handleRoomJoiner}>Join Room</button>
         </div>
       )}
+
       {isWaiting && (
         <>
-          <div>Waiting...</div> {/* Loading */}
-          {hasFriend && (
-            <>
-              <div>Room ID: {roomID}</div> {/* Copy */}
-            </>
+          <div>Waiting...</div>
+          <div className="loader"></div>
+          {hasFriendOnline && (
+            <div className="room-section">
+              <div className="room-id-container">
+                <div className="room-id">{roomID}</div>
+                <button className="copy-btn" onClick={handleCopyClipboard}>
+                  Copy
+                </button>
+              </div>
+            </div>
           )}
         </>
       )}
       {isJoining && (
-        <>
-          <div>Enter Room ID: </div>
-          <input type="text" id="room-id" ref={roomRef} />
-          <button onClick={handleRoomJoining}>Join</button>
-        </>
+        <div className="join-room-container">
+          <div className="join-room-label">Enter Room ID:</div>
+          <input
+            type="text"
+            className="join-room-input"
+            ref={roomRef}
+            placeholder="Paste here"
+          />
+          <button className="join-btn" onClick={handleRoomJoining}>
+            Join
+          </button>
+        </div>
       )}
 
       {/* Mounting and unmounting leads to grid/game reset */}
