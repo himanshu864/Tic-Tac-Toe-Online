@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { socket } from "./socket";
 import GamePlay from "./components/GamePlay";
+import GamePlayOnline from "./components/GamePlayOnline";
 
 export default function App() {
   const [isPlayerModeVisible, setPlayerVisibility] = useState(true);
@@ -16,6 +17,7 @@ export default function App() {
   const [isFriendsVisible, setFriendVisibility] = useState(false);
   const [isWaiting, setWaiting] = useState(false);
   const [isJoining, setJoining] = useState(false);
+  const [isPlayerTurnOnline, setPlayerTurnOnline] = useState(false);
 
   const roomRef = useRef();
 
@@ -65,7 +67,10 @@ export default function App() {
     socket.emit("random-room", (error, isLonely) => {
       if (!error) {
         if (isLonely) setWaiting(true);
-        else setGamePlay(true);
+        else {
+          setGamePlay(true);
+          setPlayerTurnOnline(false);
+        }
       } else alert("Room creation failed: " + error.error);
     });
   }
@@ -90,6 +95,7 @@ export default function App() {
       if (error) alert("Connection Failed: " + error.error);
       else {
         setJoining(false);
+        setPlayerTurnOnline(false);
         setGamePlay(true);
       }
     });
@@ -97,6 +103,7 @@ export default function App() {
 
   function handleOpponentJoin() {
     setWaiting(false);
+    setPlayerTurnOnline(true);
     setGamePlay(true);
   }
 
@@ -112,18 +119,24 @@ export default function App() {
     setFriendOnline(false);
     setWaiting(false);
     setJoining(false);
+    setPlayerTurnOnline(false);
     socket.disconnect();
     socket.connect();
   }
 
+  // works only with secure connections
   function handleCopyClipboard() {
-    navigator.clipboard.writeText(roomID).then(() => {
-      const copyBtn = document.querySelector(".copy-btn");
-      copyBtn.classList.add("copied", "copied-pulse");
-      setTimeout(() => {
-        copyBtn.classList.remove("copied", "copied-pulse");
-      }, 1000);
-    });
+    try {
+      navigator.clipboard.writeText(roomID).then(() => {
+        const copyBtn = document.querySelector(".copy-btn");
+        copyBtn.classList.add("copied", "copied-pulse");
+        setTimeout(() => {
+          copyBtn.classList.remove("copied", "copied-pulse");
+        }, 1000);
+      });
+    } catch (error) {
+      alert(error);
+    }
   }
 
   return (
@@ -197,13 +210,12 @@ export default function App() {
       )}
 
       {/* Mounting and unmounting leads to grid/game reset */}
-      {isPlaying && (
-        <GamePlay
-          isSingle={isSingle}
-          difficulty={difficulty}
-          isOnline={isOnline}
-        />
-      )}
+      {isPlaying &&
+        (!isOnline ? (
+          <GamePlay isSingle={isSingle} difficulty={difficulty} />
+        ) : (
+          <GamePlayOnline isInitialTurn={isPlayerTurnOnline} />
+        ))}
     </>
   );
 }
