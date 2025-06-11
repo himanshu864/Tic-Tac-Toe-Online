@@ -1,8 +1,8 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+const SOCKET_URL = "http://3.110.20.10:3000";
 
 export const socket = io(SOCKET_URL, {
-  path: "/api/socket",
-  transports: ["websocket"],
+  path: "/socket.io",
+  transports: ["websocket", "polling"],
 });
